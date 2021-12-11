@@ -3,6 +3,7 @@ const app = express()
 const cors = require('cors')
 require('dotenv').config()
 const mongoose = require('mongoose');
+var morgan = require('morgan');
 
 mongoose.connect(process.env.MONGO_URI)
 .then(() => {
@@ -12,6 +13,7 @@ mongoose.connect(process.env.MONGO_URI)
   console.log({'uh oh': 'could not connect to mongoDB', error: error})
 });
 
+app.use(morgan('combined'));
 app.use(cors())
 app.use(express.static('public'))
 app.get('/', (req, res) => {
