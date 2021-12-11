@@ -4,8 +4,9 @@ var bodyParser = require('body-parser');
 var urlParser = bodyParser.urlencoded({extended: true});
 var { User } = require(process.cwd() + '/models/User');
 
-router.get('/', (req, res, next) => {
-    res.send('GET');
+router.get('/', async (req, res, next) => {
+    let users = await User.find().lean();
+    res.send(users);
 })
 
 router.post('/', urlParser, async (req, res, next) => {
