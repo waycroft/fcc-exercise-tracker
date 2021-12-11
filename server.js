@@ -18,6 +18,9 @@ app.get('/', (req, res) => {
   res.sendFile(__dirname + '/views/index.html')
 });
 
+var usersRouter = require(process.cwd() + '/routes/users');
+app.use('/api/users', usersRouter);
+
 
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
