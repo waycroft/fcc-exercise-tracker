@@ -5,7 +5,7 @@ const UserSchema = new mongoose.Schema({
     log: [{
         description: String,
         duration: Number,
-        date: String,
+        date: Number,
     }]
 })
 

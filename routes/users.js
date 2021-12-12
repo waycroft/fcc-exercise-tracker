@@ -10,12 +10,16 @@ router.get('/', async (req, res, next) => {
 })
 
 router.get('/:id/logs', async (req, res, next) => {
+    let from = new Date(req.query.from).getTime();
+    let to = new Date(req.query.to).getTime();
+    let limit = Number(req.query.limit);
+
     let exerciseLog = await User.aggregate(
         [
             { $addFields: {
                 count: {$size: "$log"}
             }},
-            { $unset: ["__v"]} // mIGHT need to remove the _id that comes with each exercise. not sure why this is even adding...?
+            { $unset: ["__v"]} // mIGHT need to also remove the _id that comes with each exercise. not sure why this is even adding...?
         ])
     res.send(exerciseLog);
 })
@@ -30,7 +34,7 @@ router.post('/', urlParser, async (req, res, next) => {
 })
 
 router.post('/:id/exercises', urlParser, async (req, res, next) => {
-    let date = req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString();
+    let date = req.body.date ? new Date(req.body.date).getTime() : new Date().getTime();
 
     let writeOp = await User.updateOne({_id: req.params.id}, {
         $push: {
@@ -48,7 +52,7 @@ router.post('/:id/exercises', urlParser, async (req, res, next) => {
     let returnedUser = await User.findById(req.params.id, '-log -__v').lean();
     returnedUser.description = req.body.description;
     returnedUser.duration = Number(req.body.duration);
-    returnedUser.date = date;
+    returnedUser.date = new Date(date).toDateString();
 
     res.send(returnedUser);
 })
