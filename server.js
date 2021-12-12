@@ -13,7 +13,7 @@ mongoose.connect(process.env.MONGO_URI)
   console.log({'uh oh': 'could not connect to mongoDB', error: error})
 });
 
-app.use(morgan('combined'));
+app.use(morgan('tiny'));
 app.use(cors())
 app.use(express.static('public'))
 app.get('/', (req, res) => {
