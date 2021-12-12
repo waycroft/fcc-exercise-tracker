@@ -5,10 +5,7 @@ var urlParser = bodyParser.urlencoded({extended: true});
 var { User } = require(process.cwd() + '/models/User');
 
 router.get('/', async (req, res, next) => {
-    let users = await User.find().lean();
-    users = users.map(userObj => {
-        return {_id: userObj._id, username: userObj.username};
-    })
+    let users = await User.find({}, '-log -__v').lean();
     res.send(users);
 })
 
@@ -24,7 +21,7 @@ router.post('/', urlParser, async (req, res, next) => {
 router.post('/:id/exercises', urlParser, async (req, res, next) => {
     let date = req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString();
 
-    let user = await User.findOneAndUpdate({_id: req.params.id}, {
+    let writeOp = await User.updateOne({_id: req.params.id}, {
         $push: {
             log: {
                 description: req.body.description,
@@ -32,9 +29,16 @@ router.post('/:id/exercises', urlParser, async (req, res, next) => {
                 date: date
             }
         }
-    }, {new: true});
+    });
 
-    res.send(user);
+    console.log(writeOp);
+
+    let returnedUser = await User.findById(req.params.id, '-log -__v').lean();
+    returnedUser.description = req.body.description;
+    returnedUser.duration = Number(req.body.duration);
+    returnedUser.date = date;
+
+    res.send(returnedUser);
 })
 
 module.exports = router;
