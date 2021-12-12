@@ -24,15 +24,15 @@ router.post('/', urlParser, async (req, res, next) => {
 router.post('/:id/exercises', urlParser, async (req, res, next) => {
     let date = req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString();
 
-    // removing...
-    // let writeOp = await User.updateOne({_id: req.params.id}, {
-
-    // });
-    // let user_with_exercise = {...user};
-    // user_with_exercise.description = req.body.description;
-    // user_with_exercise.duration = Number(req.body.duration);
-    // user_with_exercise.date = date;
-    // delete user_with_exercise.__v;
+    let user = await User.findOneAndUpdate({_id: req.params.id}, {
+        $push: {
+            log: {
+                description: req.body.description,
+                duration: req.body.duration,
+                date: date
+            }
+        }
+    }, {new: true});
 
     res.send(user);
 })
