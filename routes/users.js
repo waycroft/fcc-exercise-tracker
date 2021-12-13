@@ -15,12 +15,23 @@ router.get('/:id/logs', async (req, res, next) => {
     let limit = Number(req.query.limit);
 
     let exerciseLog = await User.aggregate(
-        [
-            { $addFields: {
-                count: {$size: "$log"}
+        [ 
+            { $project: {
+                log: {
+                    // including this with filter causes: MongoServerError: Invalid $project :: caused by :: FieldPath field names may not start with '$'.
+                    // $slice: ["$log", limit],
+                    $filter: {
+                        input: "$log",
+                        cond: { $and: [ {$gte: ["$$this.date", from]}, {$lte: ["$$this.date", to]} ]}
+                    },
+                },
+                count: {$size: "$log"},
             }},
-            { $unset: ["__v"]} // mIGHT need to also remove the _id that comes with each exercise. not sure why this is even adding...?
         ])
+
+    // for (let i = 0; i < exerciseLog[0].log; i++) {
+    //     if (!logItemWithinLimits) delete exerciseLog[0].log[]
+    // }
     res.send(exerciseLog);
 })
 
