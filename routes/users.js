@@ -7,13 +7,22 @@ var { User } = require(process.cwd() + '/models/User');
 async function getFullExerciseLog(userId) {
     return await User.aggregate(
         [ 
-            { $unset: "log._id"}
+            { $match: {
+                _id: userId
+            }},
+            { $project: {
+                count: {$size: "$log"},
+            }},
+            // { $unset: "log._id"}
         ])
 }
 
 async function getFilteredExerciseLog(userId) {
     return await User.aggregate(
         [ 
+            { $match: {
+                _id: userId
+            }},
             { $project: {
                 log: { $filter: {
                         input: "$log",
@@ -41,6 +50,8 @@ router.get('/:id/logs', async (req, res, next) => {
     let limit = Number(req.query.limit) || 100;
 
     let exerciseLog;
+
+    // might just scrap the aggregation stuff and do object manipulation...
 
     if (isNaN(from) || isNaN(to) || isNaN(limit)) {
         exerciseLog = await getFullExerciseLog(userId);
