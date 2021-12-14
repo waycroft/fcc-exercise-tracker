@@ -66,7 +66,7 @@ router.post('/', urlParser, async (req, res, next) => {
 })
 
 router.post('/:id/exercises', urlParser, async (req, res, next) => {
-    let date = req.body.date ? new Date(req.body.date).getTime() : new Date().getTime();
+    let date = req.body.date ? new Date(req.body.date).toDateString() : new Date().toDateString();
 
     let writeOp = await User.updateOne({_id: req.params.id}, {
         $push: {
