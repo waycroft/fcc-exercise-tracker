@@ -4,35 +4,56 @@ var bodyParser = require('body-parser');
 var urlParser = bodyParser.urlencoded({extended: true});
 var { User } = require(process.cwd() + '/models/User');
 
+async function getFullExerciseLog(userId) {
+    return await User.aggregate(
+        [ 
+            { $unset: "log._id"}
+        ])
+}
+
+async function getFilteredExerciseLog(userId) {
+    return await User.aggregate(
+        [ 
+            { $project: {
+                log: { $filter: {
+                        input: "$log",
+                        cond: {$and: [ { $gte: ["$$this.date", from]}, {$lt: ["$$this.date", to]} ]}
+                    },
+                },
+                // not sure why I can't include this $slice in the log object above, but doing it in a separate operation prevents the MongoServerError I was getting...
+                // log: {$slice: ["$log", limit]},
+                count: {$size: "$log"},
+            }},
+            { $unset: "log._id"}
+        ])
+}
+
 router.get('/', async (req, res, next) => {
     let users = await User.find({}, '-log -__v').lean();
     res.send(users);
 })
 
 router.get('/:id/logs', async (req, res, next) => {
+    let userId = req.params.id;
+
     let from = new Date(req.query.from).getTime();
     let to = new Date(req.query.to).getTime();
-    let limit = Number(req.query.limit);
+    let limit = Number(req.query.limit) || 100;
 
-    let exerciseLog = await User.aggregate(
-        [ 
-            { $project: {
-                log: {
-                    // including this with filter causes: MongoServerError: Invalid $project :: caused by :: FieldPath field names may not start with '$'.
-                    // $slice: ["$log", limit],
-                    $filter: {
-                        input: "$log",
-                        cond: { $and: [ {$gte: ["$$this.date", from]}, {$lte: ["$$this.date", to]} ]}
-                    },
-                },
-                count: {$size: "$log"},
-            }},
-        ])
+    let exerciseLog;
+
+    if (isNaN(from) || isNaN(to) || isNaN(limit)) {
+        exerciseLog = await getFullExerciseLog(userId);
+        res.send(exerciseLog);
+        return;
+    }
+
+    exerciseLog = await getFilteredExerciseLog(userId);
+    res.send(exerciseLog);
 
     // for (let i = 0; i < exerciseLog[0].log; i++) {
     //     if (!logItemWithinLimits) delete exerciseLog[0].log[]
     // }
-    res.send(exerciseLog);
 })
 
 router.post('/', urlParser, async (req, res, next) => {
