@@ -17,7 +17,17 @@ async function getFullExerciseLog(userId) {
         ])
 }
 
-async function getFilteredExerciseLog(userId) {
+/**
+ * 
+ * @param {string} userId 
+ * @param {{from: number, to: number, limit: number}} options 
+ * @returns user object with filtered exercise log as array
+ * 
+ * Filters a user's exercise log given a from date, to date, and a limit (quantity). 
+ */
+async function getFilteredExerciseLog(userId, options) {
+    let {from, to, limit} = options;
+
     return await User.aggregate(
         [ 
             { $match: {
@@ -45,21 +55,23 @@ router.get('/', async (req, res, next) => {
 router.get('/:id/logs', async (req, res, next) => {
     let userId = req.params.id;
 
-    let from = new Date(req.query.from).getTime();
-    let to = new Date(req.query.to).getTime();
-    let limit = Number(req.query.limit) || 100;
+    let options = {
+        from: new Date(req.query.from).getTime(),
+        to: new Date(req.query.to).getTime(),
+        limit: Number(req.query.limit) || 100,
+    }
 
     let exerciseLog;
 
     // might just scrap the aggregation stuff and do object manipulation...
 
-    if (isNaN(from) || isNaN(to) || isNaN(limit)) {
+    if (isNaN(options.from) || isNaN(options.to) || isNaN(options.limit)) {
         exerciseLog = await getFullExerciseLog(userId);
         res.send(exerciseLog);
         return;
     }
 
-    exerciseLog = await getFilteredExerciseLog(userId);
+    exerciseLog = await getFilteredExerciseLog(userId, options);
     res.send(exerciseLog);
 
     // for (let i = 0; i < exerciseLog[0].log; i++) {
